@@ -1,0 +1,50 @@
+import os
+import time
+import requests
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+#here I need to adjust url everytime I am scraping a collection
+url = 'https://www.showstudio.com/collections/seasonless/gucci-exquisite-gucci'
+
+driver = webdriver.Firefox()
+driver.get(url)
+
+#because this website contain cookies I need to accept them
+time.sleep(2) # Let the page load, so the cookie link is clickable
+cookie_link = driver.find_element(By.XPATH, '//*[(@id="CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll")]')
+cookie_link.click()
+
+#div of images
+images = driver.find_elements(By.CLASS_NAME, 'col.col-6.sm-col-4.relative')
+
+#creating a folder 
+desktop_path = os.path.join(os.path.expanduser('~'), 'Desktop')
+folder_name = 'gucci3_new'
+folder_path = os.path.join(desktop_path, folder_name)
+os.makedirs(folder_path, exist_ok=True)
+
+#downloading images
+links={}
+for number, image in enumerate(images):
+    time.sleep(1)
+    image.click()
+    img_tags = image.find_elements(By.TAG_NAME, 'img')
+    link = img_tags[1].get_attribute('src') #this url is showing a lot of small images first and then you can click on the big image, thats what I am chosing here
+    
+    #unique number
+    image_number = link.split('/')[-1].split('-')[-1]
+    
+    links[f'gucci_aw22_{image_number}'] = link
+    response = requests.get(link)
+    if response.status_code == 200:
+        with open(os.path.join(folder_path, f'gucci_aw22_{image_number}.jpg'), 'wb') as f:
+            f.write(response.content)
+    close_link = image.find_element(By.XPATH, '//*[(@class="icon-close")]')
+    close_link.click()
+
+driver.quit()
+
+df = pd.DataFrame([links]).T.reset_index()
+df.columns = ['image name', 'image URL']
+df.rename(columns={'index': 'Image_ID'}, inplace=True)
