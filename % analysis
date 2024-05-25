@@ -1,0 +1,28 @@
+#here I already have a df with columns: image name, brand, season, time(dedicated numbers for each season), cw items, total number
+import pandas as pd
+
+#counting cw items
+def count_pluses(row):
+    item_value = row['cw items']
+    if item_value is not None:
+        if '+' in item_value:
+            return item_value.count('+') + 1
+        elif item_value == 'non' or item_value == 'None':
+            return 0
+    return 1
+#creating 'cw items number'
+df['cw items number'] = df.apply(count_pluses, axis=1)
+
+df['cw items number'] = pd.to_numeric(df['cw items number'], errors='coerce')
+df['total number'] = pd.to_numeric(df['total number'], errors='coerce')
+sum_per_time = df.groupby('Time')[ 'cw items number'].sum()
+
+for time, total in sum_per_time.items():
+    print(f"Time {time}: {total} items")
+
+sum_per_time = df.groupby('Time')[ 'total number'].sum()
+
+for time, total in sum_per_time.items():
+    print(f"Time {time}: {total} items")
+
+#next I created did computation in excel file and created visualizations 
