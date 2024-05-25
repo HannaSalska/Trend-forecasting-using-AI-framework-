@@ -1,0 +1,33 @@
+import pandas as pd
+df['brand'] = df['brand'].str.strip()
+print(df['brand'].unique())
+
+#tokenizing words
+df.columns = df.columns.str.strip()
+df['cw items'] = df['cw items'].fillna('')
+def tokenize(text):
+    words = re.findall(r'\b\w+\b', text.lower())
+    return [word for word in words if word != 'non']
+df['tokens'] = df['cw items'].apply(tokenize)
+#counting highest word count for the whole column, with each word being a token
+
+#function to count word frequency
+def count_words(df):
+    all_tokens = [token for tokens_list in df['tokens'] for token in tokens_list]
+    return Counter(all_tokens)
+word_counts = count_words(df)
+
+word_counts_df = pd.DataFrame(word_counts.items(), columns=['word', 'count'])
+def plot_top_words(top_n=10):
+    top_words = word_counts_df.nlargest(top_n, 'count')
+
+    plt.figure(figsize=(1, 100))
+    sns.barplot(data=top_words, x='count', y='word', palette='Set3')
+    plt.title(f'Top {top_n} Words for Entire Column')
+    plt.xlabel('Count')
+    plt.ylabel('Word')
+    plt.savefig('words count.png') 
+    plt.show()
+plot_top_words()
+
+#counting whole description of each item as one token
