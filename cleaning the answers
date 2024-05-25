@@ -1,0 +1,9 @@
+import os
+import random
+import requests
+import pandas as pd
+import re
+df['number'] = df['answer'].str.extract(r'Number of items visible on the photo: (\d+)')
+df['items'] = df['answer'].str.extract(r'Items that could be part of a capsule wardrobe: (.+)', flags=re.DOTALL)
+
+df['items'] = df['items'].str.replace(', ', ' + ')
