@@ -31,3 +31,29 @@ def plot_top_words(top_n=10):
 plot_top_words()
 
 #counting whole description of each item as one token
+def tokenize(text, delimiter='+'):
+
+    tokens = text.split(delimiter)
+    tokens = [token.strip().lower() for token in tokens]
+    return tokens
+all_tokens = []
+
+for answer in df['cw items']:
+    all_tokens.extend(tokenize(answer))
+
+#Removing unwanted tokens
+tokens_to_exclude = {'non'}
+filtered_tokens = [token for token in all_tokens if token not in tokens_to_exclude]
+
+token_counts = Counter(filtered_tokens)
+
+freq_df = pd.DataFrame(token_counts.items(), columns=['Token', 'Frequency'])
+top_freq_df = freq_df.sort_values(by='Frequency', ascending=False).head(10)
+
+plt.figure(figsize=(14, 6))
+sns.barplot(data=top_freq_df, x='Frequency', y='Token', palette='pastel')
+plt.title('Expression Frequencies')
+plt.xlabel('Frequency')
+plt.ylabel('items')
+plt.savefig('expression frequencies.png')
+plt.show()
