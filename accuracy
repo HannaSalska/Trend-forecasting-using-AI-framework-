@@ -1,0 +1,64 @@
+#first getting a sample
+#calculating how many should I have per each brand 
+
+brands = df['Brand'].unique()
+sample_size_per_brand = 200 // len(brands)
+sample_size_per_brand
+
+#creating a sampled df
+sampled_rows = []
+
+#iterate through each brand and sample the rows
+for brand in brands:
+    brand_df = df[df['Brand'] == brand]
+    sampled_brand_rows = brand_df.sample(n=sample_size_per_brand, random_state=42)
+    sampled_rows.append(sampled_brand_rows)
+
+#concatenate the sampled rows into a single DataFrame
+sampled_df = pd.concat(sampled_rows, ignore_index=True)
+
+#sampling remaning rows
+remaining_rows = 200 - len(sampled_df)
+if remaining_rows > 0:
+    remaining_df = df.loc[~df.index.isin(sampled_df.index)]
+    sampled_df = pd.concat([sampled_df, remaining_df.sample(n=remaining_rows, random_state=42)], ignore_index=True)
+#working on sampled df 
+df = df.apply(lambda x: x.str.lower() if x.name != 'Name' else x)
+
+#checking items 
+from fuzzywuzzy import fuzz
+
+#Function to check if two items are a match
+def is_match(item1, item2):
+    return fuzz.partial_ratio(item1, item2) >= 70  # Adjust the threshold as needed
+
+total_correct_items = 0
+total_rows = len(df)
+
+for index, row in df.iterrows():
+    person1_items = set(row['cw items HE'].split(' + '))
+    person2_items = set(row['cw items openai6'].split(' + ')) #here I run each human coder and openai sample, so I changed it manually everytime
+
+    correct_items = set()
+    for item1 in person1_items:
+        for item2 in person2_items:
+            if is_match(item1, item2):
+                correct_items.add(item1)
+
+    total_correct_items += len(correct_items) / max(len(person1_items), len(person2_items))
+
+accuracy_score_items = total_correct_items / total_rows
+
+#accuracy for total items
+
+column1 = 'total items HE'
+column2 = 'total oa6'
+
+equal_count = (df[column1] == df[column2]).sum()
+total_rows = len(df)
+percentage_equal = (equal_count / total_rows) * 100
+
+#standard deviation
+import numpy as np
+differences = df['total items HE'] - df['total HC1'] #here I run each human coder and openai sample, so I changed it manually everytime
+std_dev_differences = np.std(differences)
